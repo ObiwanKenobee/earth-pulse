@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Building2 } from "lucide-react";
 import { Globe } from "@/components/planet/Globe";
 import type { LayerKey } from "@/components/planet/Globe";
 import {
   AlertCenter,
   LayerPanel,
-  ScenarioEngine,
   StatsRail,
   Ticker,
   TimeMachine,
   TopBar,
 } from "@/components/planet/HUD";
+import { ScenarioPanel } from "@/components/planet/ScenarioPanel";
+import { CityView } from "@/components/planet/CityView";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +43,7 @@ function Index() {
     "population",
   ]);
   const [year, setYear] = useState(2026);
+  const [cityOpen, setCityOpen] = useState(false);
 
   const toggle = (k: LayerKey) =>
     setLayers((cur) => (cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k]));
@@ -92,6 +95,12 @@ function Index() {
         <p className="mono mt-1 text-[10px] tracking-widest text-muted-foreground">
           218 SATELLITES · 47 COUPLED MODELS · 1.2M TRAJECTORIES/MIN
         </p>
+        <button
+          onClick={() => setCityOpen(true)}
+          className="mono pointer-events-auto mt-3 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--color-primary)]/50 bg-[color:var(--color-primary)]/10 px-3 py-1.5 text-[10px] tracking-widest text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-primary)]/20"
+        >
+          <Building2 className="h-3 w-3" /> ZOOM · NAIROBI ↘
+        </button>
       </div>
 
       {/* Bottom dock */}
@@ -102,11 +111,13 @@ function Index() {
               <StatsRail />
               <TimeMachine year={year} onChange={setYear} />
             </div>
-            <ScenarioEngine />
+            <ScenarioPanel />
           </div>
         </div>
         <Ticker />
       </div>
+
+      <CityView open={cityOpen} onClose={() => setCityOpen(false)} year={year} />
     </div>
   );
 }
