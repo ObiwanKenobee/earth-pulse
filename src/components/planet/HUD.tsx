@@ -19,17 +19,20 @@ import {
   Zap,
 } from "lucide-react";
 import type { LayerKey } from "./Globe";
+import { kenyaAt } from "@/lib/kenya-data";
 
 /* -------------------- TOP BAR -------------------- */
 
 export function TopBar() {
-  const [now, setNow] = useState(() => new Date());
+  // Render an empty placeholder on first paint to avoid SSR/CSR hydration
+  // mismatch on the live clock, then tick once mounted.
+  const [utc, setUtc] = useState<string>("");
   useEffect(() => {
-    const i = setInterval(() => setNow(new Date()), 1000);
+    const tick = () => setUtc(new Date().toISOString().replace("T", " ").slice(0, 19));
+    tick();
+    const i = setInterval(tick, 1000);
     return () => clearInterval(i);
   }, []);
-
-  const utc = now.toISOString().replace("T", " ").slice(0, 19);
 
   return (
     <header className="pointer-events-auto absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-6 py-4">
@@ -68,7 +71,9 @@ export function TopBar() {
       <div className="flex items-center gap-4">
         <div className="hidden text-right md:block">
           <div className="hud-label">UTC · Live Feed</div>
-          <div className="mono text-xs text-foreground/80">{utc}</div>
+          <div className="mono text-xs text-foreground/80 tabular-nums min-w-[152px]" suppressHydrationWarning>
+            {utc || "————-—— ——:——:——"}
+          </div>
         </div>
         <div className="flex items-center gap-2 rounded-sm border border-[color:var(--color-primary)]/40 bg-[color:var(--color-primary)]/10 px-3 py-1.5">
           <Radio className="h-3 w-3 text-[color:var(--color-primary)]" />
@@ -253,13 +258,14 @@ export function TimeMachine({
     for (let y = 2020; y <= 2050; y += 5) arr.push(y);
     return arr;
   }, []);
+  const k = kenyaAt(year);
 
   return (
     <div className="panel pointer-events-auto px-5 py-3">
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Mountain className="h-3.5 w-3.5 text-[color:var(--color-primary)]" />
-          <span className="hud-label">Time Machine</span>
+          <span className="hud-label">Time Machine · Kenya / EA feed</span>
         </div>
         <div className="mono text-xl font-semibold text-[color:var(--color-primary)]">
           {year}
@@ -278,6 +284,22 @@ export function TimeMachine({
           <span key={t}>{t}</span>
         ))}
       </div>
+      <div className="mono mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 border-t border-border pt-2 text-[10px] md:grid-cols-5">
+        <FeedChip label="ΔT KE" v={`+${k.tempAnomalyC.toFixed(2)}°C`} color="#ff7a59" />
+        <FeedChip label="Rain" v={`${k.rainfallMm}mm`} color="#60a5fa" />
+        <FeedChip label="Grid" v={`${k.gridCapacityGW}GW`} color="#ffd166" />
+        <FeedChip label="RE %" v={`${Math.round(k.renewableShare * 100)}`} color="#5eead4" />
+        <FeedChip label="H₂O acc" v={`${k.waterAccessPct}%`} color="#a78bfa" />
+      </div>
+    </div>
+  );
+}
+
+function FeedChip({ label, v, color }: { label: string; v: string; color: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="tracking-widest text-muted-foreground">{label}</span>
+      <span style={{ color }}>{v}</span>
     </div>
   );
 }
