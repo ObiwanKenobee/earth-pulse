@@ -1,29 +1,112 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Globe } from "@/components/planet/Globe";
+import type { LayerKey } from "@/components/planet/Globe";
+import {
+  AlertCenter,
+  LayerPanel,
+  ScenarioEngine,
+  StatsRail,
+  Ticker,
+  TimeMachine,
+  TopBar,
+} from "@/components/planet/HUD";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Atlas Earth · Planetary Digital Twin" },
+      {
+        name: "description",
+        content:
+          "A living simulation of civilization. Climate, water, energy, supply chains, biodiversity — modeled in real time.",
+      },
+      { property: "og:title", content: "Atlas Earth · Planetary Digital Twin" },
+      {
+        property: "og:description",
+        content:
+          "A living simulation of civilization. Climate, water, energy, supply chains, biodiversity — modeled in real time.",
+      },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const [layers, setLayers] = useState<LayerKey[]>([
+    "climate",
+    "water",
+    "energy",
+    "supply",
+    "population",
+  ]);
+  const [year, setYear] = useState(2026);
+
+  const toggle = (k: LayerKey) =>
+    setLayers((cur) => (cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k]));
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+    <div className="relative h-screen w-screen overflow-hidden">
+      {/* Aurora background */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 110%, oklch(0.82 0.16 190 / 0.18), transparent 60%), radial-gradient(ellipse at 80% 0%, oklch(0.78 0.18 155 / 0.10), transparent 55%)",
+        }}
       />
+      <div aria-hidden className="scanline absolute inset-0" />
+
+      {/* Earth canvas — hero */}
+      <Globe activeLayers={layers} timeYear={year} />
+
+      {/* Vignette */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 50%, oklch(0.05 0.02 240 / 0.6) 100%)",
+        }}
+      />
+
+      <TopBar />
+
+      {/* Left dock — layer marketplace */}
+      <aside className="pointer-events-none absolute left-6 top-24 z-10">
+        <LayerPanel active={layers} onToggle={toggle} />
+      </aside>
+
+      {/* Right dock — alerts */}
+      <aside className="pointer-events-none absolute right-6 top-24 bottom-44 z-10">
+        <AlertCenter />
+      </aside>
+
+      {/* Hero overlay — only when no scenario open is conceptual; always show small intro */}
+      <div className="pointer-events-none absolute left-1/2 top-28 z-10 -translate-x-1/2 text-center">
+        <div className="hud-label">EARTH · LIVE</div>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
+          The nervous system of a planet.
+        </h1>
+        <p className="mono mt-1 text-[10px] tracking-widest text-muted-foreground">
+          218 SATELLITES · 47 COUPLED MODELS · 1.2M TRAJECTORIES/MIN
+        </p>
+      </div>
+
+      {/* Bottom dock */}
+      <div className="absolute right-0 bottom-0 left-0 z-10">
+        <div className="px-6 pb-3">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto]">
+            <div className="space-y-2">
+              <StatsRail />
+              <TimeMachine year={year} onChange={setYear} />
+            </div>
+            <ScenarioEngine />
+          </div>
+        </div>
+        <Ticker />
+      </div>
     </div>
   );
 }
