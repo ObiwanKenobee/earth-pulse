@@ -718,7 +718,6 @@ function CompareHeartbeat({ lanes, year }: { lanes: Lane[]; year: number }) {
       />
       <DiffTable
         lanes={lanes}
-        year={year}
         rows={lanes.map((l) => {
           const v = vitalIndex(year, l.mods.vital);
           const bpm = bpmFromVital(v);
@@ -875,7 +874,6 @@ function DiffTable({
   headers,
 }: {
   lanes: Lane[];
-  year: number;
   rows: { lane: Lane; cells: string[] }[];
   headers: string[];
 }) {
