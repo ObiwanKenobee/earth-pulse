@@ -13,6 +13,7 @@ import {
 } from "@/components/planet/HUD";
 import { ScenarioPanel } from "@/components/planet/ScenarioPanel";
 import { CityView } from "@/components/planet/CityView";
+import { EarthPulse } from "@/components/planet/EarthPulse";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -77,8 +78,9 @@ function Index() {
       <TopBar />
 
       {/* Left dock — layer marketplace */}
-      <aside className="pointer-events-none absolute left-6 top-24 z-10">
+      <aside className="pointer-events-none absolute left-6 top-24 bottom-44 z-10 flex flex-col gap-3 overflow-y-auto pr-1">
         <LayerPanel active={layers} onToggle={toggle} />
+        <EarthPulse year={year} />
       </aside>
 
       {/* Right dock — alerts */}
