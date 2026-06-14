@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
+  BellRing,
   ChevronDown,
   ChevronUp,
   Heart,
+  Info,
   ShieldCheck,
   Sprout,
   TriangleAlert,
 } from "lucide-react";
+import { computeAlerts, loadSubs, type PulseSection } from "./pulse-data";
+import { EarthPulseDetail } from "./EarthPulseDetail";
 
 /* =========================================================================
  * EARTH PULSE — planetary vital signs.
@@ -493,6 +497,13 @@ function Stewardship({ year }: { year: number }) {
 
 export function EarthPulse({ year }: { year: number }) {
   const [open, setOpen] = useState(true);
+  const [detail, setDetail] = useState<PulseSection | null>(null);
+  const [subs, setSubs] = useState<string[]>([]);
+  useEffect(() => setSubs(loadSubs()), [detail]);
+
+  const alerts = useMemo(() => computeAlerts(year), [year]);
+  const subscribedHits = alerts.filter((a) => subs.includes(a.id));
+
   const vi = useMemo(() => vitalIndex(year), [year]);
   // BPM = elevated when vital index drops
   const bpm = useMemo(() => lerp(58, 132, 1 - vi / 100), [vi]);
@@ -520,6 +531,25 @@ export function EarthPulse({ year }: { year: number }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetail("tipping");
+            }}
+            className="relative flex items-center gap-1 rounded-sm border border-border bg-card/40 px-1.5 py-0.5 text-[9px] tracking-widest text-muted-foreground transition hover:border-[color:var(--color-primary)]/50 hover:text-foreground"
+            title="Subscribed alerts triggered"
+          >
+            <BellRing className="h-3 w-3" />
+            <span className="mono tabular-nums">{subscribedHits.length}</span>
+            {subscribedHits.length > 0 && (
+              <span
+                className="pulse-dot absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: SEV_COLOR.crit }}
+              />
+            )}
+          </span>
           <div className="text-right">
             <div className="hud-label">EVI</div>
             <div
@@ -541,16 +571,48 @@ export function EarthPulse({ year }: { year: number }) {
 
       {open && (
         <div className="mt-3 space-y-2.5">
-          <Heartbeat year={year} bpm={bpm} />
-          <Boundaries year={year} />
-          <Tipping year={year} />
-          <Stewardship year={year} />
+          <DrillWrap section="heartbeat" onOpen={setDetail}>
+            <Heartbeat year={year} bpm={bpm} />
+          </DrillWrap>
+          <DrillWrap section="boundaries" onOpen={setDetail}>
+            <Boundaries year={year} />
+          </DrillWrap>
+          <DrillWrap section="tipping" onOpen={setDetail}>
+            <Tipping year={year} />
+          </DrillWrap>
+          <DrillWrap section="stewardship" onOpen={setDetail}>
+            <Stewardship year={year} />
+          </DrillWrap>
           <div className="mono flex items-center justify-between border-t border-border pt-2 text-[9px] tracking-widest text-muted-foreground">
             <span>FRAMEWORK · ROCKSTRÖM 2023 · IPCC AR6 · UNSDG</span>
             <span className="text-[color:var(--color-accent)]">SIGNED ✓</span>
           </div>
         </div>
       )}
+
+      <EarthPulseDetail section={detail} year={year} onClose={() => setDetail(null)} />
+    </div>
+  );
+}
+
+function DrillWrap({
+  section,
+  onOpen,
+  children,
+}: {
+  section: PulseSection;
+  onOpen: (s: PulseSection) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group relative cursor-pointer" onClick={() => onOpen(section)}>
+      {children}
+      <div className="pointer-events-none absolute right-2 top-2 flex items-center gap-1 rounded-sm border border-border/60 bg-background/80 px-1.5 py-0.5 opacity-0 transition group-hover:opacity-100">
+        <Info className="h-2.5 w-2.5 text-[color:var(--color-primary)]" />
+        <span className="mono text-[8px] tracking-widest text-[color:var(--color-primary)]">
+          DRILL
+        </span>
+      </div>
     </div>
   );
 }
